@@ -7,9 +7,9 @@ namespace LogFileParserAPI.Services
 {
     public class LogParserService
     {
-        public IEnumerable<HostSummary> GetAccessCounts(IEnumerable<string> logLines)
+        public async Task<IEnumerable<HostSummary>> GetAccessCounts(IEnumerable<string> logLines)
         {
-            var logEntries = ParseLogs(logLines);
+            var logEntries = await ParseLogs(logLines);
             return logEntries
                 .GroupBy(logEntry => logEntry.Host)
                 .Select(group => new HostSummary
@@ -20,9 +20,9 @@ namespace LogFileParserAPI.Services
                 .OrderByDescending(summary => summary.AccessCount);
         }
 
-        public IEnumerable<ResourceSummary> GetSuccessfulAccessCounts(IEnumerable<string> logLines)
+        public async Task<IEnumerable<ResourceSummary>> GetSuccessfulAccessCounts(IEnumerable<string> logLines)
         {
-            var logEntries = ParseLogs(logLines);
+            var logEntries = await ParseLogs(logLines);
             return logEntries
                 .Where(logEntry => logEntry.ReturnCode == 200 && logEntry.Request.StartsWith("GET"))
                 .GroupBy(logEntry => logEntry.Request.Split(' ', 2)[1])
@@ -35,44 +35,47 @@ namespace LogFileParserAPI.Services
         }
 
         // made public for testing
-        public IEnumerable<LogEntry> ParseLogs(IEnumerable<string> logLines)
+        public async Task<IEnumerable<LogEntry>> ParseLogs(IEnumerable<string> logLines)
         {
             var stopwatch = Stopwatch.StartNew();
             // Define the regex pattern
             string pattern = @"^(?<host>[^\s]+)\s+(?<datetime>\[[^\]]+\])\s+\""(?<request>.+?)\""\s+(?<code>\d+)\s+(?<size>\d+|-)$";
             var logEntries = new ConcurrentBag<LogEntry>();
 
-            Parallel.ForEach(logLines, line =>
+            await Task.Run(() =>
             {
-                // Match the log line against the pattern
-                var match = Regex.Match(line, pattern);
-                if (match.Success)
+                Parallel.ForEach(logLines, line =>
                 {
-                    string host = match.Groups["host"].Value;
-                    string datetime = match.Groups["datetime"].Value;
-                    string request = match.Groups["request"].Value;
-                    string returnCode = match.Groups["code"].Value;
-                    string returnSize = match.Groups["size"].Value;
-
-                    // Trim the last " HTTP/1.0" off the request
-                    if (request.EndsWith(" HTTP/1.0"))
+                    // Match the log line against the pattern
+                    var match = Regex.Match(line, pattern);
+                    if (match.Success)
                     {
-                        request = request.Substring(0, request.LastIndexOf(' '));
+                        string host = match.Groups["host"].Value;
+                        string datetime = match.Groups["datetime"].Value;
+                        string request = match.Groups["request"].Value;
+                        string returnCode = match.Groups["code"].Value;
+                        string returnSize = match.Groups["size"].Value;
+
+                        // Trim the last " HTTP/1.0" off the request
+                        if (request.EndsWith(" HTTP/1.0"))
+                        {
+                            request = request.Substring(0, request.LastIndexOf(' '));
+                        }
+
+                        logEntries.Add(new LogEntry
+                        {
+                            Host = host,
+                            DateTime = datetime,
+                            Request = request,
+                            ReturnCode = int.Parse(returnCode),
+                            ReturnSize = int.TryParse(returnSize, out var size) ? size : null
+                        });
                     }
-
-                    logEntries.Add(new LogEntry
+                    else
                     {
-                        Host = host,
-                        DateTime = datetime,
-                        Request = request,
-                        ReturnCode = int.Parse(returnCode),
-                        ReturnSize = int.TryParse(returnSize, out var size) ? size : null
-                    });
-                }
-                else
-                {
-                    Console.WriteLine("invalid line:" + line);
-                }
+                        Console.WriteLine("invalid line:" + line);
+                    }
+                });
             });
 
             stopwatch.Stop();

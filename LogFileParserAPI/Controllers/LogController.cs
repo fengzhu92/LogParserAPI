@@ -14,7 +14,7 @@ namespace LogFileParserAPI.Controllers
         }
 
         [HttpPost("host-summary")]
-        public IActionResult GetHostSummary(IFormFile file)
+        public async Task<IActionResult> GetHostSummary(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -24,21 +24,18 @@ namespace LogFileParserAPI.Controllers
             using (var reader = new StreamReader(file.OpenReadStream()))
             {
                 var logLines = new List<string>();
-                while (reader.Peek() >= 0)
+                string? logLine;
+                while ((logLine = await reader.ReadLineAsync()) != null)
                 {
-                    var line = reader.ReadLine();
-                    if (line != null)
-                    {
-                        logLines.Add(line);
-                    }
+                    logLines.Add(logLine);
                 }
-                var summaries = _logParserService.GetAccessCounts(logLines);
+                var summaries = await _logParserService.GetAccessCounts(logLines);
                 return Ok(summaries);
             }
         }
 
         [HttpPost("resource-summary")]
-        public IActionResult GetResourceSummary(IFormFile file)
+        public async Task<IActionResult> GetResourceSummary(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -48,15 +45,12 @@ namespace LogFileParserAPI.Controllers
             using (var reader = new StreamReader(file.OpenReadStream()))
             {
                 var logLines = new List<string>();
-                while (reader.Peek() >= 0)
+                string? logLine;
+                while ((logLine = await reader.ReadLineAsync()) != null)
                 {
-                    var line = reader.ReadLine();
-                    if (line != null)
-                    {
-                        logLines.Add(line);
-                    }
+                    logLines.Add(logLine);
                 }
-                var summaries = _logParserService.GetSuccessfulAccessCounts(logLines);
+                var summaries = await _logParserService.GetSuccessfulAccessCounts(logLines);
                 return Ok(summaries);
             }
         }

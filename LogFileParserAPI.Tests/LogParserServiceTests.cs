@@ -12,18 +12,18 @@ namespace LogFileParserAPI.Tests
         }
 
         [Fact]
-        public void GetAccessCounts_ShouldReturnCorrectHostSummary()
+        public async Task GetAccessCounts_ShouldReturnCorrectHostSummary()
         {
             // Arrange
             var logLines = new List<string>
-            {
-                "wpbfl2-45.gate.net [29:23:56:03] \"GET /docs/Access HTTP/1.0\" 302 -",
-                "wpbfl2-45.gate.net [29:23:56:15] \"GET /docs/Access HTTP/1.0\" 302 125",
-                "tanuki.twics.com [29:23:56:24] \"GET /OSWRCRA/general/hotline/95report/ HTTP/1.0\" 200 1250"
-            };
+                {
+                    "wpbfl2-45.gate.net [29:23:56:03] \"GET /docs/Access HTTP/1.0\" 302 -",
+                    "wpbfl2-45.gate.net [29:23:56:15] \"GET /docs/Access HTTP/1.0\" 302 125",
+                    "tanuki.twics.com [29:23:56:24] \"GET /OSWRCRA/general/hotline/95report/ HTTP/1.0\" 200 1250"
+                };
 
             // Act
-            var result = _logParserService.GetAccessCounts(logLines).ToList();
+            var result = (await _logParserService.GetAccessCounts(logLines)).ToList();
 
             // Assert
             Assert.Equal(2, result.Count);
@@ -34,19 +34,19 @@ namespace LogFileParserAPI.Tests
         }
 
         [Fact]
-        public void GetSuccessfulAccessCounts_ShouldReturnCorrectResourceSummary()
+        public async Task GetSuccessfulAccessCounts_ShouldReturnCorrectResourceSummary()
         {
             // Arrange
             var logLines = new List<string>
-            {
-                "wpbfl2-45.gate.net [29:23:56:03] \"GET /docs/Access HTTP/1.0\" 302 -",
-                "wpbfl2-45.gate.net [29:23:56:12] \"POST /Access/ HTTP/1.0\" 200 2376",
-                "tanuki.twics.com [29:23:56:24] \"GET /Access/images/epaseal.gif HTTP/1.0\" 200 1250",
-                "tanuki.twics.com [29:23:56:46] \"GET /Access/images/epaseal.gif HTTP/1.0\" 200 1380"
-            };
+                {
+                    "wpbfl2-45.gate.net [29:23:56:03] \"GET /docs/Access HTTP/1.0\" 302 -",
+                    "wpbfl2-45.gate.net [29:23:56:12] \"POST /Access/ HTTP/1.0\" 200 2376",
+                    "tanuki.twics.com [29:23:56:24] \"GET /Access/images/epaseal.gif HTTP/1.0\" 200 1250",
+                    "tanuki.twics.com [29:23:56:46] \"GET /Access/images/epaseal.gif HTTP/1.0\" 200 1380"
+                };
 
             // Act
-            var result = _logParserService.GetSuccessfulAccessCounts(logLines).ToList();
+            var result = (await _logParserService.GetSuccessfulAccessCounts(logLines)).ToList();
 
             // Assert
             Assert.Single(result);
@@ -55,16 +55,16 @@ namespace LogFileParserAPI.Tests
         }
 
         [Fact]
-        public void ParseLogs_ShouldReturnCorrectLogEntries()
+        public async Task ParseLogs_ShouldReturnCorrectLogEntries()
         {
             // Arrange
             var logLines = new List<string>
-            {
-                "tanuki.twics.com [29:23:56:24] \"GET /OSWRCRA/general/hotline/95report/ HTTP/1.0\" 200 1250"
-            };
+                {
+                    "tanuki.twics.com [29:23:56:24] \"GET /OSWRCRA/general/hotline/95report/ HTTP/1.0\" 200 1250"
+                };
 
             // Act
-            var result = _logParserService.ParseLogs(logLines).ToList();
+            var result = (await _logParserService.ParseLogs(logLines)).ToList();
 
             // Assert
             Assert.Single(result);
