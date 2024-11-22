@@ -7,7 +7,11 @@ namespace LogFileParserAPI.Controllers
     [Route("api/logs")]
     public class LogController : ControllerBase
     {
-        private readonly LogParserService _logParserService = new LogParserService();
+        private readonly LogParserService _logParserService;
+        public LogController(LogParserService logParserService)
+        {
+            _logParserService = logParserService;
+        }
 
         [HttpPost("host-summary")]
         public IActionResult GetHostSummary(IFormFile file)
