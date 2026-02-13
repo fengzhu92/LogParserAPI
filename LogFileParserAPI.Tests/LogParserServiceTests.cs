@@ -1,4 +1,5 @@
 using LogFileParserAPI.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LogFileParserAPI.Tests
 {
@@ -8,7 +9,7 @@ namespace LogFileParserAPI.Tests
 
         public LogParserServiceTests()
         {
-            _logParserService = new LogParserService();
+            _logParserService = new LogParserService(NullLogger<LogParserService>.Instance);
         }
 
         [Fact]
